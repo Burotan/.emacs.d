@@ -34,20 +34,6 @@
 
 (setq vc-make-backup-files t)
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; OS SETTINGS
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(when (eq system-type 'windows-nt)
-  (add-to-list 'default-frame-alist '(font . "Droid Sans Mono-11" ))
-  (set-face-attribute 'default t :font "Droid Sans Mono-11" ))
-
-(when (eq system-type 'darwin)
-  (message "MACOSX"))
-
-(when (eq system-type 'gnu/linux)
-  (message "Linux"))
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PACKAGES AND UPDATE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -87,6 +73,10 @@
   (update-emacs))
 
 (add-to-list 'command-switch-alist '("-update" . update-fn))
+
+;; Update if first time running
+(if (not (file-directory-p "~/.emacs.d/elpa"))
+    (update-emacs))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; SMOOTH SCROLLING
@@ -200,6 +190,16 @@
     ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ADVISES
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defadvice find-file (before make-directory-maybe (filename &optional wildcards) activate)
+  "Create parent directory if not exists while visiting file."
+  (unless (file-exists-p filename)
+    (let ((dir (file-name-directory filename)))
+      (unless (file-exists-p dir)
+        (make-directory dir)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CUSTOM KEYBINDINGS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (global-set-key (kbd "C-c C-a") 'add-comment)
@@ -207,9 +207,21 @@
 (global-set-key (kbd "C-c C-k") 'compile)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; NOTES
+;; OS SETTINGS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(when (eq system-type 'windows-nt)
+  (add-to-list 'default-frame-alist '(font . "Droid Sans Mono-11" ))
+  (set-face-attribute 'default t :font "Droid Sans Mono-11" ))
+
+(when (eq system-type 'darwin)
+  (message "MACOSX"))
+
+(when (eq system-type 'gnu/linux)
+  (message "Linux"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; TODO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; SGML KEYBINDINGS
 ;; TRAMP MODE SETTINGS
-;; 
