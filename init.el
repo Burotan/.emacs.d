@@ -49,32 +49,40 @@
 
 (setq to-install
       '(
-	ido-vertical-mode
+	;; Utils ->
 	smex
+	neotree
+	smooth-scrolling
+	ido-vertical-mode
+	powerline
+	auto-complete
+	;; Helpers ->
+	google-this
+	google-translate
+	lorem-ipsum
+	;; Modes ->
 	zencoding-mode
 	js2-mode
 	php-mode
 	json-mode
 	skewer-mode
-	auto-complete
-	google-this
-	google-translate
-	powerline
-	smooth-scrolling
+	lua-mode
 	))
 
 (defun update-emacs()
   "Updating emacs"
   (interactive)
   (package-refresh-contents)
-  (mapc 'install-if-needed to-install))
+  (mapc 'install-if-needed to-install)
+  (message "JOBS DONE!"))
 
 (defun update-fn (switch)
   (update-emacs))
 
+;; Run update if emacs started from shell like "emacs -update"
 (add-to-list 'command-switch-alist '("-update" . update-fn))
 
-;; Update if first time running
+;; Load packages if emacs running first time
 (if (not (file-directory-p "~/.emacs.d/elpa"))
     (update-emacs))
 
@@ -82,32 +90,49 @@
 ;; SMOOTH SCROLLING
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'smooth-scrolling)
+
 (smooth-scrolling-mode 1)
+
+(setq-default smooth-scroll-margin 4)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; NEOTREE CONFIG
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'neotree)
+
+(global-set-key [f8] 'neotree-toggle)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ZEN CODING CONFIG
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'zencoding-mode)
+
 (add-hook 'sgml-mode-hook 'zencoding-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; IDO CONFIG
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'ido-vertical-mode)
+
 (ido-mode t)
 
 (setq ido-use-faces t)
+
 (set-face-attribute 'ido-vertical-first-match-face nil
                     :background nil
                     :foreground "orange")
+
 (set-face-attribute 'ido-vertical-only-match-face nil
                     :background nil
                     :foreground nil)
+
 (set-face-attribute 'ido-vertical-match-face nil
                     :foreground nil)
 
 (ido-vertical-mode t)
+
 (setq ido-vertical-define-keys 'C-n-and-C-p-only)
+
 (setq ido-vertical-show-count t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -133,14 +158,12 @@
 ;; AUTO COMPLETE CONFIG
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'auto-complete)
-
 (global-auto-complete-mode t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PHP CONFIG
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (require 'php-mode)
-
 (add-hook 'php-mode-hook 'my-php-mode-hook)
 
 (defun my-php-mode-hook ()
@@ -175,8 +198,6 @@
                     :background "DarkOrange"
                     :box nil)
 
-(setq powerline-arrow-shape 'curve)
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CUSTOM FUNCTIONS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -189,8 +210,19 @@
     ";; " (upcase name) "\n"
     ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")))
 
+(defun move-line-up()
+  (interactive)
+  (transpose-lines 1)
+  (forward-line -2))
+
+(defun move-line-down()
+  (interactive)
+  (forward-line 1)
+  (transpose-lines 1)
+  (forward-line -1))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ADVISES
+;; ADVICES
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defadvice find-file (before make-directory-maybe (filename &optional wildcards) activate)
   "Create parent directory if not exists while visiting file."
@@ -202,6 +234,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CUSTOM KEYBINDINGS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(global-set-key (kbd "M-<up>") 'move-line-up)
+
+(global-set-key (kbd "M-<down>") 'move-line-down)
+
 (global-set-key (kbd "C-c C-a") 'add-comment)
 
 (global-set-key (kbd "C-c C-k") 'compile)
@@ -222,6 +258,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; TODO
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
 ;; SGML KEYBINDINGS
 ;; TRAMP MODE SETTINGS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
