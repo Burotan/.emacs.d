@@ -34,6 +34,8 @@
 
 (setq vc-make-backup-files t)
 
+(defalias 'yes-or-no-p 'y-or-n-p)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; PACKAGES AND UPDATE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -60,6 +62,7 @@
 	google-this
 	google-translate
 	lorem-ipsum
+	eimp
 	;; Modes ->
 	zencoding-mode
 	js2-mode
@@ -85,6 +88,11 @@
 ;; Load packages if emacs running first time
 (if (not (file-directory-p "~/.emacs.d/elpa"))
     (update-emacs))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; EIMP CONFIG
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(add-hook 'image-mode-hook 'eimp-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; SMOOTH SCROLLING
@@ -199,6 +207,28 @@
                     :box nil)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ORG MODE CONFIG
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((ditaa . t))) ; this line activates ditaa
+
+(defun org-add-class(classname)
+  (interactive "sClass Name:")
+  (insert (concat"#+attr_html: :class " classname)))
+
+(defun org-add-attr(key val)
+  (interactive "sAttr Key:\nsAttr Val:")
+  (if (string= "" val)
+      (insert (concat "#+attr_html: :" key " \"\""))
+    (insert (concat "#+attr_html: :" key " " val))))
+
+(org-defkey org-mode-map (kbd "C-c h") 'org-html-export-to-html)
+(org-defkey org-mode-map (kbd "C-c p") 'org-latex-export-to-pdf)
+(org-defkey org-mode-map (kbd "C-c c") 'org-add-class)
+(org-defkey org-mode-map (kbd "C-c a") 'org-add-attr)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CUSTOM FUNCTIONS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun add-comment(name)
@@ -220,6 +250,11 @@
   (forward-line 1)
   (transpose-lines 1)
   (forward-line -1))
+
+;;(defun get-cdn(package)
+;;  "Adds cdn item to item"
+;;  (interactive "sLibrary Name:")
+;;  ())
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ADVICES
@@ -261,3 +296,5 @@
 ;; SGML KEYBINDINGS
 ;; TRAMP MODE SETTINGS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
