@@ -1,8 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; GENERAL CONFIG
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(load-theme 'tango-dark t)
-
 (setq inhibit-startup-message t)
 
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -58,11 +56,13 @@
 	ido-vertical-mode
 	powerline
 	auto-complete
+
 	;; Helpers ->
 	google-this
 	google-translate
 	lorem-ipsum
 	eimp
+
 	;; Modes ->
 	zencoding-mode
 	js2-mode
@@ -70,6 +70,17 @@
 	json-mode
 	skewer-mode
 	lua-mode
+	haskell-mode
+	erlang
+
+	;; Org Mode ->
+	ox-twbs
+	
+	;; Themes ->
+	solarized-theme
+	suscolors-theme
+	tangotango-theme
+	ample-theme
 	))
 
 (defun update-emacs()
@@ -88,6 +99,24 @@
 ;; Load packages if emacs running first time
 (if (not (file-directory-p "~/.emacs.d/elpa"))
     (update-emacs))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; THEME CONFIG
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;(load-theme 'tango-dark t)
+
+;;(require 'solarized-theme)
+;;(load-theme 'solarized-dark t)
+
+;;(require 'suscolors-theme)
+;;(load-theme 'suscolors t)
+
+(require 'ample-theme)
+(load-theme 'ample t)
+
+;;(require 'tangotango-theme)
+;;(load-theme 'tangotango t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; EIMP CONFIG
@@ -213,6 +242,9 @@
  'org-babel-load-languages
  '((ditaa . t))) ; this line activates ditaa
 
+(setq org-export-html-postamble-format 
+      '(("en" "<p class=\"postamble\">Last Updated %d. Created by %c</p>")))
+
 (defun org-add-class(classname)
   (interactive "sClass Name:")
   (insert (concat"#+attr_html: :class " classname)))
@@ -222,6 +254,11 @@
   (if (string= "" val)
       (insert (concat "#+attr_html: :" key " \"\""))
     (insert (concat "#+attr_html: :" key " " val))))
+
+(setq org-footnote-definition-re "^\\[fn:[-_[:word:]]+\\]"
+      org-footnote-re            (concat "\\[\\(?:fn:\\([-_[:word:]]+\\)?:"
+                                         "\\|"
+                                         "\\(fn:[-_[:word:]]+\\)\\)"))
 
 (org-defkey org-mode-map (kbd "C-c h") 'org-html-export-to-html)
 (org-defkey org-mode-map (kbd "C-c p") 'org-latex-export-to-pdf)
@@ -296,5 +333,3 @@
 ;; SGML KEYBINDINGS
 ;; TRAMP MODE SETTINGS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
