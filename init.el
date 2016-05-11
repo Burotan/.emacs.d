@@ -75,6 +75,7 @@
 
 	;; Org Mode ->
 	ox-twbs
+	org-bullets
 	
 	;; Themes ->
 	solarized-theme
@@ -238,6 +239,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ORG MODE CONFIG
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(require 'org-bullets)
+(add-hook 'org-mode-hook
+	  (lambda ()
+	    (org-bullets-mode t)))
+
+;; Change collapse type
+(setq org-ellipsis " ⮷")
+
+;; Only one star per level
+(setq org-hide-leading-stars t)
+
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((ditaa . t))) ; this line activates ditaa
