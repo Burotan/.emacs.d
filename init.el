@@ -1,19 +1,40 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; GENERAL CONFIG
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(setq inhibit-startup-message t)
+;; Setup package control
+(require 'package)
+(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
+(setq package-enable-at-startup nil)
+(package-initialize)
 
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+; fetch the list of packages available 
+(unless package-archive-contents
+  (package-refresh-contents))
 
-(menu-bar-mode -1)
+(setq package-list '(use-package))
 
-(scroll-bar-mode -1)
+; install the missing packages
+(dolist (package package-list)
+  (unless (package-installed-p package)
+    (package-install package)))
 
-(global-linum-mode)
+;; Specifies local directory to load packages from
+(add-to-list 'load-path "~/.emacs.d/lisp/")
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
+(let ((default-directory  "~/.emacs.d/packages/"))
+  (normal-top-level-add-subdirs-to-load-path))
 
-(tool-bar-mode -1)
+(require 'use-package)
 
-(show-paren-mode)
+;; Essential settings.
+(setq inhibit-splash-screen t
+      inhibit-startup-message t
+      inhibit-startup-echo-area-message t)
+(tool-bar-mode -1) ; No toolbar
+(scroll-bar-mode -1) ; Hide scrollbars
+(menu-bar-mode -1) ; Hide menu bar
+(show-paren-mode t) ; Highlights matching parenthesis
+(electric-pair-mode t)
+(setq initial-scratch-message "") ; No scratch text
 
 (when (fboundp 'windmove-default-keybindings)
   (windmove-default-keybindings))
@@ -26,236 +47,250 @@
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (load custom-file)
 
-(setq backup-directory-alist
-      `(("." . ,(expand-file-name
-                 (concat user-emacs-directory "backup")))))
-
-(setq vc-make-backup-files t)
+;; Temporarily set garbage collect threshold high to improve start time
+(setq gc-cons-threshold most-positive-fixnum)
+(add-hook 'after-init-hook (lambda () (setq gc-cons-threshold most-positive-fixnum)))
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; PACKAGES AND UPDATE
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'package)
-(package-initialize)
-
-(add-to-list 'package-archives
-	     '("melpa" . "http://melpa.milkbox.net/packages/"))
-
-(defun install-if-needed (package)
-  (unless (package-installed-p package)
-    (package-install package)))
-
-(setq to-install
-      '(
-	;; Utils ->
-	smex
-	neotree
-	smooth-scrolling
-	ido-vertical-mode
-	powerline
-	auto-complete
-
-	;; Helpers ->
-	google-this
-	google-translate
-	lorem-ipsum
-	eimp
-
-	;; Modes ->
-	zencoding-mode
-	js2-mode
-	php-mode
-	json-mode
-	skewer-mode
-	lua-mode
-	haskell-mode
-	erlang
-
-	;; Org Mode ->
-	ox-twbs
-	org-bullets
-	
-	;; Themes ->
-	solarized-theme
-	suscolors-theme
-	tangotango-theme
-	ample-theme
-	))
-
-(defun update-emacs()
-  "Updating emacs"
-  (interactive)
-  (package-refresh-contents)
-  (mapc 'install-if-needed to-install)
-  (message "JOBS DONE!"))
-
-(defun update-fn (switch)
-  (update-emacs))
-
-;; Run update if emacs started from shell like "emacs -update"
-(add-to-list 'command-switch-alist '("-update" . update-fn))
-
-;; Load packages if emacs running first time
-(if (not (file-directory-p "~/.emacs.d/elpa"))
-    (update-emacs))
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (when (string= (buffer-name) "*scratch*")
+              (animate-string ";; Welcome back, sir! How can i help you today?" (/ (frame-height) 2)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; THEME CONFIG
+;; MODES
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package sublime-themes
+  :ensure t
+  :config
+  (load-theme 'brin t)) ; Color theme
 
-;;(load-theme 'tango-dark t)
+(use-package js2-mode
+  :ensure t
+  :config
+  (add-to-list 'auto-mode-alist (cons (rx ".js" eos) 'js2-mode))
+  (add-hook 'js-mode-hook 'js2-minor-mode))
 
-;;(require 'solarized-theme)
-;;(load-theme 'solarized-dark t)
+(use-package skewer-mode
+  :ensure t
+  :config
+  (add-hook 'js2-mode-hook 'skewer-mode)
+  (add-hook 'css-mode-hook 'skewer-css-mode)
+  (add-hook 'html-mode-hook 'skewer-html-mode))
 
-;;(require 'suscolors-theme)
-;;(load-theme 'suscolors t)
+(use-package php-mode
+  :ensure t
+  :config
+  (add-hook 'php-mode-hook 'my-php-mode-hook)
 
-(require 'ample-theme)
-(load-theme 'ample t)
+  (defun my-php-mode-hook ()
+    (setq indent-tabs-mode t)
+    (let ((my-tab-width 4))
+      (setq tab-width my-tab-width)
+      (setq c-basic-indent my-tab-width)
+      (set (make-local-variable 'tab-stop-list)
+	   (number-sequence my-tab-width 200 my-tab-width)))))
 
-;;(require 'tangotango-theme)
-;;(load-theme 'tangotango t)
+;; Web major mode
+(use-package web-mode
+  :ensure t
+  :init (progn
+          (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+          (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
+  :config (progn
+            (add-hook 'web-mode-hook
+                      (lambda ()
+                        (setq web-mode-enable-css-colorization t)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; EIMP CONFIG
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(add-hook 'image-mode-hook 'eimp-mode)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; SMOOTH SCROLLING
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'smooth-scrolling)
+(use-package zencoding-mode
+  :ensure t
+  :config
+  (add-hook 'web-mode-hook 'zencoding-mode))
 
-(smooth-scrolling-mode 1)
 
-(setq-default smooth-scroll-margin 4)
+;; Markdown formatting and preview
+(use-package markdown-mode
+  :ensure t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (setq markdown-command "multimarkdown")
+  :config
+  (setq markdown-live-preview-delete-export 'delete-on-export))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; NEOTREE CONFIG
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'neotree)
+;; Web company backend
+(use-package company-web
+  :ensure t
+  :config
+  (add-to-list 'company-backends 'company-web-html))
 
-(global-set-key [f8] 'neotree-toggle)
+(use-package haskell-mode
+  :ensure t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; ZEN CODING CONFIG
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'zencoding-mode)
+(use-package json-mode
+  :ensure t)
 
-(add-hook 'sgml-mode-hook 'zencoding-mode)
+(use-package lua-mode
+  :ensure t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; IDO CONFIG
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'ido-vertical-mode)
+(use-package go-mode
+  :ensure t)
 
-(ido-mode t)
+(use-package rust-mode
+  :ensure t)
 
-(setq ido-use-faces t)
+(use-package erlang
+  :ensure t)
 
-(set-face-attribute 'ido-vertical-first-match-face nil
-                    :background nil
-                    :foreground "orange")
+(use-package google-this ;; Broken !
+  :ensure t
+  :init
+  (google-this-mode 1)
+  :bind
+  ("C-x g" . google-this.mode-submap))
 
-(set-face-attribute 'ido-vertical-only-match-face nil
-                    :background nil
-                    :foreground nil)
-
-(set-face-attribute 'ido-vertical-match-face nil
-                    :foreground nil)
-
-(ido-vertical-mode t)
-
-(setq ido-vertical-define-keys 'C-n-and-C-p-only)
-
-(setq ido-vertical-show-count t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; SKEWER CONFIG
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(add-to-list 'auto-mode-alist (cons (rx ".js" eos) 'js2-mode))
-
-(add-hook 'js-mode-hook 'js2-minor-mode)
-(add-hook 'js2-mode-hook 'skewer-mode)
-(add-hook 'css-mode-hook 'skewer-css-mode)
-(add-hook 'html-mode-hook 'skewer-html-mode)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; SMEX CONFIG
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'smex)
-(smex-initialize)
-(global-set-key (kbd "M-x") 'smex)
-(global-set-key (kbd "M-X") 'smex-major-mode-commands)
-(global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; AUTO COMPLETE CONFIG
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'auto-complete)
-(global-auto-complete-mode t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; PHP CONFIG
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'php-mode)
-(add-hook 'php-mode-hook 'my-php-mode-hook)
-
-(defun my-php-mode-hook ()
-  (setq indent-tabs-mode t)
-  (let ((my-tab-width 4))
-    (setq tab-width my-tab-width)
-    (setq c-basic-indent my-tab-width)
-    (set (make-local-variable 'tab-stop-list)
-         (number-sequence my-tab-width 200 my-tab-width))))
+(use-package lorem-ipsum
+  :ensure t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; GOOGLE-THIS-CONFIG
+;; UTILITIES
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(google-this-mode 1)
-(global-set-key (kbd "C-x g") 'google-this-mode-submap)
+(use-package ido-vertical-mode
+  :ensure t
+  :init
+  (ido-mode t)
+  (setq ido-use-faces t)
+  (ido-vertical-mode t)
+  :config
+  (set-face-attribute 'ido-vertical-first-match-face nil
+		      :background nil
+		      :foreground "orange")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; GOOGLE TRANSLATE CONFIG
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'google-translate)
-(require 'google-translate-smooth-ui)
-(global-set-key "\C-ct" 'google-translate-at-point)
-(global-set-key "\C-cT" 'google-translate-query-translate)
+  (set-face-attribute 'ido-vertical-only-match-face nil
+		      :background nil
+		      :foreground nil)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; POWERLINE CONFIG
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'powerline)
-(powerline-center-theme)
-(set-face-attribute 'mode-line nil
-                    :foreground "White"
-                    :background "DarkOrange"
-                    :box nil)
+  (set-face-attribute 'ido-vertical-match-face nil
+		      :foreground nil)
+  (setq ido-vertical-define-keys 'C-n-and-C-p-only)
+  (setq ido-vertical-show-count t))
+
+(use-package hl-line
+  :ensure t
+  :config (set-face-background 'hl-line "#073642"))
+
+(use-package multiple-cursors
+  :ensure t
+  :bind (("C->" . mc/mark-next-like-this)
+         ("C-<" . mc/mark-previous-like-this)))
+
+(use-package smooth-scrolling
+  :ensure t
+  :config
+  (smooth-scrolling-mode 1)
+  (setq-default smooth-scroll-margin 4))
+
+(use-package smex
+  :ensure t
+  :init (smex-initialize)
+  :bind
+  ("M-x" . smex)
+  ("M-X" . smex-major-mode-commands)
+  ("C-c C-c M-x" . execute-extended-command))
+
+(use-package powerline
+  :ensure t
+  :config
+  (powerline-center-theme)
+  (set-face-attribute 'mode-line nil
+		      :foreground "White"
+		      :background "DarkOrange"
+		      :box nil))
+
+(use-package recentf
+  :init
+  (recentf-mode 1)
+  (setq recentf-max-menu-items 25)
+  (global-set-key "\C-x\ \C-r" 'recentf-open-files))
+
+(use-package linum-relative
+  :ensure t
+  :config
+  (setq linum-relative-current-symbol "")
+  (global-linum-mode t)
+  (linum-relative-mode))
+
+;; Git porcelen
+(use-package magit
+  :ensure t)
+
+;; Autocompletion backend
+(use-package company
+  :ensure t
+  :init
+  (global-company-mode)
+  :config
+  (setq company-idle-delay 0) ; Delay to complete
+  (setq company-selection-wrap-around t) ; Loops around suggestions
+  (define-key company-active-map [tab] 'company-select-next) ; Tab to cycle forward
+  (define-key company-active-map (kbd "C-n") 'company-select-next) ; Ctrl-N to cycle forward (vim-ish)
+  (define-key company-active-map (kbd "C-p") 'company-select-previous) ; Ctrl-P to cycle back (vim-ish)
+
+  ;; Inherits colors from theme to style autocomplete menu correctly
+  (require 'color)
+  (let ((bg (face-attribute 'default :background)))
+  (custom-set-faces
+      `(company-tooltip ((t (:inherit default :background ,(color-lighten-name bg 2)))))
+      `(company-scrollbar-bg ((t (:background ,(color-lighten-name bg 10)))))
+      `(company-scrollbar-fg ((t (:background ,(color-lighten-name bg 5)))))
+      `(company-tooltip-selection ((t (:inherit font-lock-function-name-face))))
+      `(company-tooltip-common ((t (:inherit font-lock-constant-face)))))))
+
+;; Uses jedi server and company mode frameword for Python completion
+(use-package company-jedi
+  :ensure t
+  :config
+  (defun my/python-mode-hook ()
+  (add-to-list 'company-backends 'company-jedi))
+  (add-hook 'python-mode-hook 'my/python-mode-hook))
+
+;; On the fly syntax checking
+(use-package flycheck
+  :ensure t
+  :config
+  (progn
+   ; (setq flycheck-display-errors-function nil)
+    (add-hook 'after-init-hook 'global-flycheck-mode)))
+
+;; Text manipulation
+(use-package expand-region
+  :ensure t
+  :config
+  (global-set-key (kbd "C-=") 'er/expand-region))
+
+;; NERDtree replacement
+(use-package neotree
+  :ensure t
+  :config
+  (global-set-key [f8] 'neotree-toggle))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ORG MODE CONFIG
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'org-bullets)
-(add-hook 'org-mode-hook
-	  (lambda ()
-	    (org-bullets-mode t)))
+(use-package org-bullets
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
 
-;; Change collapse type
-(setq org-ellipsis " ⮷")
-
-;; Only one star per level
-(setq org-hide-leading-stars t)
+(use-package ox-twbs
+  :ensure t)
 
 (org-babel-do-load-languages
  'org-babel-load-languages
- '((ditaa . t))) ; this line activates ditaa
-
-(setq org-export-html-postamble-format 
-      '(("en" "<p class=\"postamble\">Last Updated %d. Created by %c</p>")))
+ '((ditaa . t)))
 
 (defun org-add-class(classname)
   (interactive "sClass Name:")
@@ -267,15 +302,16 @@
       (insert (concat "#+attr_html: :" key " \"\""))
     (insert (concat "#+attr_html: :" key " " val))))
 
-(setq org-footnote-definition-re "^\\[fn:[-_[:word:]]+\\]"
-      org-footnote-re            (concat "\\[\\(?:fn:\\([-_[:word:]]+\\)?:"
-                                         "\\|"
-                                         "\\(fn:[-_[:word:]]+\\)\\)"))
-
 (org-defkey org-mode-map (kbd "C-c h") 'org-html-export-to-html)
 (org-defkey org-mode-map (kbd "C-c p") 'org-latex-export-to-pdf)
 (org-defkey org-mode-map (kbd "C-c c") 'org-add-class)
 (org-defkey org-mode-map (kbd "C-c a") 'org-add-attr)
+
+;; Backup options
+;; backup in one place. flat, no tree structure
+(setq backup-directory-alist '((".*" . "~/.emacs.d/backup/")))
+(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto/" t)))
+(setq backup-by-copying t) ; Stop shinanigans with links
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; CUSTOM FUNCTIONS
@@ -299,11 +335,6 @@
   (forward-line 1)
   (transpose-lines 1)
   (forward-line -1))
-
-;;(defun get-cdn(package)
-;;  "Adds cdn item to item"
-;;  (interactive "sLibrary Name:")
-;;  ())
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ADVICES
@@ -337,11 +368,6 @@
   (message "MACOSX"))
 
 (when (eq system-type 'gnu/linux)
-  (message "Linux"))
+  (message "Welcome, Sir!"))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; TODO
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; SGML KEYBINDINGS
-;; TRAMP MODE SETTINGS
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; init.el ends here
