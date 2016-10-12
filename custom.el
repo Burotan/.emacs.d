@@ -7,6 +7,9 @@
  '(custom-safe-themes
    (quote
     ("0a5e87ac98b0adfe4e12356fff24d49ffbbe5ef0aa8290752c184e6857d70558" default)))
+ '(package-selected-packages
+   (quote
+    (ox-twbs org-bullets neotree expand-region flycheck company-jedi magit linum-relative powerline smex smooth-scrolling multiple-cursors ido-vertical-mode lorem-ipsum google-this erlang rust-mode go-mode lua-mode json-mode haskell-mode company-web markdown-mode zencoding-mode web-mode php-mode skewer-mode js2-mode sublime-themes use-package)))
  '(safe-local-variable-values
    (quote
     ((org-html-postamble)
@@ -54,4 +57,8 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(company-scrollbar-bg ((t (:background "#404858"))))
+ '(company-scrollbar-fg ((t (:background "#353b49"))))
+ '(company-tooltip ((t (:inherit default :background "#2f3440"))))
+ '(company-tooltip-common ((t (:inherit font-lock-constant-face))))
+ '(company-tooltip-selection ((t (:inherit font-lock-function-name-face)))))
