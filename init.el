@@ -275,7 +275,7 @@
 (use-package neotree
   :ensure t
   :config
-  (global-set-key [f8] 'neotree-toggle))
+  (global-set-key (kbd "C-c C-v") 'neotree-toggle))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; ORG MODE CONFIG
