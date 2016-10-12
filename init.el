@@ -1,4 +1,9 @@
-;; Setup package control
+;;; package --- Summary
+;;; Setup package control
+;;; Commentary:
+;;; BS \ Emacs config
+;;; Code:
+
 (require 'package)
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
@@ -6,10 +11,11 @@
 (setq package-enable-at-startup nil)
 (package-initialize)
 
-; fetch the list of packages available 
+;; fetch the list of packages available
 (unless package-archive-contents
   (package-refresh-contents))
 
+(defvar package-list)
 (setq package-list '(use-package))
 
 ; install the missing packages
@@ -83,7 +89,7 @@
   :ensure t
   :config
   (add-hook 'php-mode-hook 'my-php-mode-hook)
-
+  (defvar c-basic-indent)
   (defun my-php-mode-hook ()
     (setq indent-tabs-mode t)
     (let ((my-tab-width 4))
@@ -92,23 +98,25 @@
       (set (make-local-variable 'tab-stop-list)
 	   (number-sequence my-tab-width 200 my-tab-width)))))
 
+(use-package vue-mode
+  :ensure t)
+
 ;; Web major mode
 (use-package web-mode
   :ensure t
   :init (progn
           (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+	  (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
           (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
   :config (progn
             (add-hook 'web-mode-hook
                       (lambda ()
                         (setq web-mode-enable-css-colorization t)))))
 
-
 (use-package zencoding-mode
   :ensure t
   :config
   (add-hook 'web-mode-hook 'zencoding-mode))
-
 
 ;; Markdown formatting and preview
 (use-package markdown-mode
@@ -162,6 +170,7 @@
   :ensure t
   :init
   (ido-mode t)
+  (defvar ido-use-faces)
   (setq ido-use-faces t)
   (ido-vertical-mode t)
   :config
@@ -174,19 +183,23 @@
 		      :foreground nil)
 
   (set-face-attribute 'ido-vertical-match-face nil
+		      :background nil
 		      :foreground nil)
+  
   (setq ido-vertical-define-keys 'C-n-and-C-p-only)
   (setq ido-vertical-show-count t))
 
 (use-package hl-line
   :ensure t
-  :config (set-face-background 'hl-line "#073642"))
+  :init
+  (hl-line-mode t)
+  :config (set-face-background 'hl-line "#232323"))
 
 (use-package multiple-cursors
   :ensure t
   :bind (("C->" . mc/mark-next-like-this)
          ("C-<" . mc/mark-previous-like-this)))
-
+   
 (use-package smooth-scrolling
   :ensure t
   :config
@@ -213,6 +226,7 @@
 (use-package recentf
   :init
   (recentf-mode 1)
+  (defvar recentf-max-menu-items)
   (setq recentf-max-menu-items 25)
   (global-set-key "\C-x\ \C-r" 'recentf-open-files))
 
@@ -271,7 +285,6 @@
   :config
   (global-set-key (kbd "C-=") 'er/expand-region))
 
-;; NERDtree replacement
 (use-package neotree
   :ensure t
   :config
@@ -350,12 +363,14 @@
 ;; CUSTOM KEYBINDINGS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (global-set-key (kbd "M-<up>") 'move-line-up)
-
 (global-set-key (kbd "M-<down>") 'move-line-down)
-
 (global-set-key (kbd "C-c C-a") 'add-comment)
-
 (global-set-key (kbd "C-c C-k") 'compile)
+
+;; FUCK Meta Keys
+(global-set-key (kbd "M-f") 'ido-find-file)
+(global-set-key (kbd "M-b") 'ido-display-buffer)
+(global-set-key (kbd "M-B") 'buffer-list)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; OS SETTINGS
