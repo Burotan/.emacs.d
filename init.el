@@ -214,14 +214,14 @@
   ("M-X" . smex-major-mode-commands)
   ("C-c C-c M-x" . execute-extended-command))
 
-(use-package powerline
-  :ensure t
-  :config
-  (powerline-center-theme)
-  (set-face-attribute 'mode-line nil
-		      :foreground "White"
-		      :background "DarkOrange"
-		      :box nil))
+;;(use-package powerline
+;;  :ensure t
+;;  :config
+;;  (powerline-center-theme)
+;;  (set-face-attribute 'mode-line nil
+;;		      :foreground "White"
+;;		      :background "DarkOrange"
+;;		      :box nil))
 
 (use-package recentf
   :init
@@ -369,8 +369,26 @@
 
 ;; FUCK Meta Keys
 (global-set-key (kbd "M-f") 'ido-find-file)
-(global-set-key (kbd "M-b") 'ido-display-buffer)
+(global-set-key (kbd "M-b") 'ido-switch-buffer)
 (global-set-key (kbd "M-B") 'buffer-list)
+(global-set-key (kbd "M-s") 'save-buffer)
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; MATERIALIZE
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun materialize-add-form-item(colsize  name)
+  "Add materializecss form item by column."
+  (interactive "sColumn Size:\nsItem Name:")
+  (insert
+   (concat
+    "<div class=\"input-field col " colsize  "\">\n"
+    "<input type=\"text\" id=\"" (downcase name) "\" name=\"" (downcase name) "\" />\n"
+    "<label for=\"" (downcase name) "\">" name "</label>\n"
+    "</div>"
+    )))
+
+(global-set-key (kbd "C-c C-b i") 'materialize-add-form-item)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; OS SETTINGS
