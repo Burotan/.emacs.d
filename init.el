@@ -67,10 +67,15 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; MODES
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(use-package sublime-themes
+;(use-package sublime-themes
+;  :ensure t
+;  :config
+;  (load-theme 'brin t)) ; Color theme
+
+(use-package gotham-theme
   :ensure t
   :config
-  (load-theme 'brin t)) ; Color theme
+  (load-theme 'gotham t))
 
 (use-package js2-mode
   :ensure t
@@ -128,12 +133,6 @@
   :init (setq markdown-command "multimarkdown")
   :config
   (setq markdown-live-preview-delete-export 'delete-on-export))
-
-;; Web company backend
-(use-package company-web
-  :ensure t
-  :config
-  (add-to-list 'company-backends 'company-web-html))
 
 (use-package haskell-mode
   :ensure t)
@@ -240,28 +239,6 @@
 ;; Git porcelen
 (use-package magit
   :ensure t)
-
-;; Autocompletion backend
-(use-package company
-  :ensure t
-  :init
-  (global-company-mode)
-  :config
-  (setq company-idle-delay 0) ; Delay to complete
-  (setq company-selection-wrap-around t) ; Loops around suggestions
-  (define-key company-active-map [tab] 'company-select-next) ; Tab to cycle forward
-  (define-key company-active-map (kbd "C-n") 'company-select-next) ; Ctrl-N to cycle forward (vim-ish)
-  (define-key company-active-map (kbd "C-p") 'company-select-previous) ; Ctrl-P to cycle back (vim-ish)
-
-  ;; Inherits colors from theme to style autocomplete menu correctly
-  (require 'color)
-  (let ((bg (face-attribute 'default :background)))
-  (custom-set-faces
-      `(company-tooltip ((t (:inherit default :background ,(color-lighten-name bg 2)))))
-      `(company-scrollbar-bg ((t (:background ,(color-lighten-name bg 10)))))
-      `(company-scrollbar-fg ((t (:background ,(color-lighten-name bg 5)))))
-      `(company-tooltip-selection ((t (:inherit font-lock-function-name-face))))
-      `(company-tooltip-common ((t (:inherit font-lock-constant-face)))))))
 
 ;; Uses jedi server and company mode frameword for Python completion
 (use-package company-jedi

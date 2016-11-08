@@ -57,6 +57,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(default ((t (:background nil))))
  '(company-scrollbar-bg ((t (:background "#404858"))))
  '(company-scrollbar-fg ((t (:background "#353b49"))))
  '(company-tooltip ((t (:inherit default :background "#2f3440"))))
