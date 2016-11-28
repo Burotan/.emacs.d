@@ -5,3 +5,6 @@ ido.last
 smex-items
 elpa/
 games/
+recentf
+tramp
+session*

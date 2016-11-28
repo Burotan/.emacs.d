@@ -4,17 +4,37 @@
 ;;; BS \ Emacs config
 ;;; Code:
 
+(require 'package)
+(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
+(add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
+(add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
+(setq package-enable-at-startup nil)
+(package-initialize)
+
+;; fetch the list of packages available
+(unless package-archive-contents
+  (package-refresh-contents))
+
+(defvar package-list)
+(setq package-list '(use-package))
+
+; install the missing packages
+(dolist (package package-list)
+  (unless (package-installed-p package)
+    (package-install package)))
+
 ;; Specifies local directory to load packages from
 (add-to-list 'load-path "~/.emacs.d/lisp/")
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes/")
 (let ((default-directory  "~/.emacs.d/packages/"))
   (normal-top-level-add-subdirs-to-load-path))
 
-(package-initialize)
-
 (require 'use-package)
 
 ;; Essential settings.
+
+(global-unset-key (kbd "C-z"))
+
 (setq inhibit-splash-screen t
       inhibit-startup-message t
       inhibit-startup-echo-area-message t)
@@ -23,30 +43,19 @@
 (menu-bar-mode -1) ; Hide menu bar
 (show-paren-mode t) ; Highlights matching parenthesis
 (electric-pair-mode t)
+(hl-line-mode)
 (setq initial-scratch-message "") ; No scratch text
 
+(when (fboundp 'windmove-default-keybindings)
+  (windmove-default-keybindings))
+
+(when window-system
+  (setq frame-title-format '(buffer-file-name "%f" ("%b")))
+  (tooltip-mode -1)
+  (blink-cursor-mode -1))
+
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
-;; (load custom-file)
-
-(setq-default tab-width 2)
-
-(mapc (lambda (hooksym)
-	(add-hook hooksym
-		  (lambda ()
-		    (kill-local-variable 'indent-tabs-mode)
-		    (kill-local-variable 'tab-width)
-		    (local-set-key (kbd "TAB") 'self-insert-command))))
-      '(c-mode-common-hook))
-
-;; Backup options
-;; backup in one place. flat, no tree structure
-(setq backup-directory-alist '((".*" . "~/.emacs.d/backup/")))
-(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto/" t)))
-(setq backup-by-copying t) ; Stop shinanigans with links
-
-;; Temporarily set garbage collect threshold high to improve start time
-(setq gc-cons-threshold most-positive-fixnum)
-(add-hook 'after-init-hook (lambda () (setq gc-cons-threshold most-positive-fixnum)))
+(load custom-file)
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 
@@ -55,27 +64,22 @@
             (when (string= (buffer-name) "*scratch*")
               (animate-string ";; Welcome back, sir! How can i help you today?" (/ (frame-height) 2)))))
 
-(use-package gotham-theme
-  :ensure t
-  :config
-  (load-theme 'gotham t))
+;; (load-theme 'ritchie t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; MODES
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package gruvbox-theme
+  :ensure t
+  :config
+  (load-theme 'gruvbox t))
+
 
 (use-package js2-mode
   :ensure t
   :config
   (add-to-list 'auto-mode-alist (cons (rx ".js" eos) 'js2-mode))
   (add-hook 'js-mode-hook 'js2-minor-mode))
-
-(use-package skewer-mode
-  :ensure t
-  :config
-  (add-hook 'js2-mode-hook 'skewer-mode)
-  (add-hook 'css-mode-hook 'skewer-css-mode)
-  (add-hook 'html-mode-hook 'skewer-html-mode))
 
 (use-package php-mode
   :ensure t
@@ -98,6 +102,7 @@
   :ensure t
   :init (progn
           (add-to-list 'auto-mode-alist '("\\.erb\\'" . web-mode))
+	  (add-to-list 'auto-mode-alist '("\\.php\\'" . web-mode))
 	  (add-to-list 'auto-mode-alist '("\\.blade.php\\'" . web-mode))
           (add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode)))
   :config (progn
@@ -105,11 +110,79 @@
                       (lambda ()
                         (setq web-mode-enable-css-colorization t)))))
 
+(use-package zencoding-mode
+  :ensure t
+  :config
+  (add-hook 'web-mode-hook 'zencoding-mode))
+
+;; Markdown formatting and preview
+(use-package markdown-mode
+  :ensure t
+  :commands (markdown-mode gfm-mode)
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :init (setq markdown-command "multimarkdown")
+  :config
+  (setq markdown-live-preview-delete-export 'delete-on-export))
+
+(use-package haskell-mode
+  :ensure t)
+
 (use-package json-mode
+  :ensure t)
+
+(use-package lua-mode
+  :ensure t)
+
+(use-package go-mode
+  :ensure t)
+
+(use-package rust-mode
+  :ensure t)
+
+(use-package erlang
   :ensure t)
 
 (use-package lorem-ipsum
   :ensure t)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; UTILITIES
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package ido-vertical-mode
+  :ensure t
+  :init
+  (ido-mode t)
+  (defvar ido-use-faces)
+  (setq ido-use-faces t)
+  (ido-vertical-mode t)
+  :config
+  (set-face-attribute 'ido-vertical-first-match-face nil
+		      :background nil
+		      :foreground "orange")
+
+  (set-face-attribute 'ido-vertical-only-match-face nil
+		      :background nil
+		      :foreground nil)
+
+  (set-face-attribute 'ido-vertical-match-face nil
+		      :background nil
+		      :foreground nil)
+  
+  (setq ido-vertical-define-keys 'C-n-and-C-p-only)
+  (setq ido-vertical-show-count t))
+
+(use-package multiple-cursors
+  :ensure t
+  :bind (("C->" . mc/mark-next-like-this)
+         ("C-<" . mc/mark-previous-like-this)))
+   
+(use-package smooth-scrolling
+  :ensure t
+  :config
+  (smooth-scrolling-mode 1)
+  (setq-default smooth-scroll-margin 4))
 
 (use-package smex
   :ensure t
@@ -125,6 +198,59 @@
   (setq linum-relative-current-symbol "")
   (global-linum-mode t)
   (linum-relative-mode))
+
+(use-package neotree
+  :ensure t
+  :config
+  (global-set-key (kbd "C-c C-v") 'neotree-toggle))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; ORG MODE CONFIG
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(use-package org-bullets
+  :ensure t
+  :config
+  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+(use-package ox-twbs
+  :ensure t)
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((ditaa . t)))
+
+(defun org-add-class(classname)
+  (interactive "sClass Name:")
+  (insert (concat"#+attr_html: :class " classname)))
+
+(defun org-add-attr(key val)
+  (interactive "sAttr Key:\nsAttr Val:")
+  (if (string= "" val)
+      (insert (concat "#+attr_html: :" key " \"\""))
+    (insert (concat "#+attr_html: :" key " " val))))
+
+(org-defkey org-mode-map (kbd "C-c h") 'org-html-export-to-html)
+(org-defkey org-mode-map (kbd "C-c p") 'org-latex-export-to-pdf)
+(org-defkey org-mode-map (kbd "C-c c") 'org-add-class)
+(org-defkey org-mode-map (kbd "C-c a") 'org-add-attr)
+
+;; Backup options
+;; backup in one place. flat, no tree structure
+(setq backup-directory-alist '((".*" . "~/.emacs.d/backup/")))
+(setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto/" t)))
+(setq backup-by-copying t) ; Stop shinanigans with links
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; CUSTOM FUNCTIONS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun add-comment(name)
+  "Adds elisp comment section"
+  (interactive "sComment Section Name:")
+  (insert
+   (concat
+    ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;\n"
+    ";; " (upcase name) "\n"
+    ";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;")))
 
 (defun move-line-up()
   (interactive)
@@ -161,4 +287,42 @@
 (global-set-key (kbd "M-B") 'buffer-list)
 (global-set-key (kbd "M-s") 'save-buffer)
 
-;;; init-lite.el ends here
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; MATERIALIZE
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun materialize-add-form-item(colsize  name)
+  "Add materializecss form item by column."
+  (interactive "sColumn Size:\nsItem Name:")
+  (insert
+   (concat
+    "<div class=\"input-field col " colsize  "\">\n"
+    "<input type=\"text\" id=\"" (downcase name) "\" name=\"" (downcase name) "\" />\n"
+    "<label for=\"" (downcase name) "\">" name "</label>\n"
+    "</div>"
+    )))
+
+(global-set-key (kbd "C-c C-b i") 'materialize-add-form-item)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; BUFFER RESIZE
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(global-set-key (kbd "C-c <C-up>") 'shrink-window)
+(global-set-key (kbd "C-c <C-down>") 'enlarge-window)
+(global-set-key (kbd "C-c <C-left>") 'shrink-window-horizontally)
+(global-set-key (kbd "C-c <C-right>") 'enlarge-window-horizontally)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; OS SETTINGS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(when (eq system-type 'windows-nt)
+  (add-to-list 'default-frame-alist '(font . "Droid Sans Mono-11" ))
+  (set-face-attribute 'default t :font "Droid Sans Mono-11" ))
+
+(when (eq system-type 'darwin)
+  (message "MACOSX"))
+
+(when (eq system-type 'gnu/linux)
+  (message "Welcome, Sir!"))
+
+;;; init.el ends here
